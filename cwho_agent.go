@@ -39,10 +39,14 @@ func main() {
         log.Fatalf("Error opening utmp file for reading")
     }
 
+    //
+    // For each line of the utmp file, do
+    //
+
     for _, arg := range ut {
-        fmt.Printf("%s %s\n", arg.User, arg.Host)
-        //fmt.Printf("%s %s %s %s %s\n", arg[0], arg[1], arg[2], arg[4], arg[5])
-        //fmt.Printf("%s\n", ut[arg].User)
+        if (arg.Type == 7) {
+            fmt.Printf("%d %s %s %s %d %d\n", arg.Type, arg.User, arg.Line, arg.Host, arg.Tv.Sec, arg.Tv.Usec)
+        }
     }
 
     conn, err := net.Dial("tcp", "localhost:5962")
