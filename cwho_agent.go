@@ -14,14 +14,15 @@ import (
     "strings"
     //"strconv"
     //"time"
+    "log"
     "net"
+    "fmt"
     "github.com/EricLagergren/go-gnulib/utmp"
 )
 
 func main() {
     var u = "/var/run/utmp"
-    var ut *utmp.Utmp
-    var uf *utmp.File
+    var ut []*utmp.Utmp
 
     host, _ := os.Hostname()
     
@@ -29,19 +30,27 @@ func main() {
         host = host[0:strings.Index(host, ".")]
     }
 
-    uf, err := utmp.Open(u, Reading)
+    //
+    // Read in utmp file
+    //
+
+    ut, err := utmp.ReadUtmp(u, 0x00)
     if err != nil {
-        os.Exit(1)
+        log.Fatalf("Error opening utmp file for reading")
     }
 
-    ut = utmp.GetUtEnt(u)
-        
+    for _, arg := range ut {
+        fmt.Printf("%s %s\n", arg.User, arg.Host)
+        //fmt.Printf("%s %s %s %s %s\n", arg[0], arg[1], arg[2], arg[4], arg[5])
+        //fmt.Printf("%s\n", ut[arg].User)
+    }
+
     conn, err := net.Dial("tcp", "localhost:5962")
     if err != nil {
         return
     }
     
-    //fmt.Fprintf(conn, "%d,%s,%d,%d,%f,%f,%f,%f,%s\n", timestamp, host, nc, mt, om, fivm, fifm, swap_used_pct, diskReport)
+    //fmt.Fprintf(conn, "", )
     
     conn.Close()
 }
