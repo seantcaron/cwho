@@ -40,6 +40,15 @@ func main() {
     }
 
     //
+    // Open the connection to the collection host
+    //
+
+    conn, err := net.Dial("tcp", "localhost:5963")
+    if err != nil {
+        log.Fatalf("Error calling net.Dial()")
+    }
+
+    //
     // For each line of the utmp file, parse out the information that we need.
     //
 
@@ -50,14 +59,10 @@ func main() {
             tt := time.Unix(int64(arg.Tv.Sec), int64(arg.Tv.Usec))
             ts := tt.Format(time.ANSIC)
             fmt.Printf("%s\t%s\t%s\t%s\n", arg.User, arg.Line, arg.Host, ts)
+            fmt.Fprintf(conn, "%s %s %s %s %s\n", host, arg.User, arg.Line, arg.Host, ts)
         }
     }
 
-    conn, err := net.Dial("tcp", "localhost:5962")
-    if err != nil {
-        return
-    }
-    
     //fmt.Fprintf(conn, "", )
     
     conn.Close()
