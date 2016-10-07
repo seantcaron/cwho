@@ -9,8 +9,10 @@ import (
     "net"
     // "os"
     "fmt"
-    //"strings"
+    "strings"
     "bufio"
+    "log"
+    "strconv"
     "database/sql"
     _ "github.com/go-sql-driver/mysql"
 )
@@ -34,7 +36,8 @@ func main() {
 
 //
 // Database schema:
-//  CREATE TABLE ENTRIES (host varchar(255), user varchar(255), line varchar(255), fromhost varchar(255), timestamp varchar(255));
+//  CREATE TABLE entries (host varchar(258), user varchar(34), line varchar(34), fromhost varchar(258), timestamp varchar(34));
+//  CREATE TABLE hosts (host varchar(258), hostid integer NOT NULL AUTO_INCREMENT PRIMARY KEY);
 //
 
 func handle_connection(c net.Conn) {
@@ -54,15 +57,65 @@ func handle_connection(c net.Conn) {
     
         inp := input.Text()
 	
-        //data := strings.Fields(inp)
+        data := strings.Fields(inp)
+
+	host := data[0]
+	user := data[1]
+	line := data[2]
+	from := data[3]
+	stamp := data[4]
 
         //fmt.Printf("%s\n", input.Text())
 
-        fmt.Printf(inp)
+        fmt.Printf(inp+"\n")
  
-        myDSN = dbUser + ":" + dbPass + "@" + dbHost + "/" + dbName
+        myDSN = dbUser + ":" + dbPass + "@tcp(" + dbHost + ":3306)/" + dbName
     
-        dbconn, _ := sql.Open("mysql", myDSN)
+        dbconn, dbConnErr := sql.Open("mysql", myDSN)
+        if dbConnErr != nil {
+	    log.Fatalf("Error connecting to database")
+        }
+
+	dbPingErr := dbconn.Ping()
+	if dbPingErr != nil {
+	    log.Fatalf("Error attempting to ping database connection")
+        }
+
+	//
+	// Check to see if the host exists in the host tracking table
+	//
+
+        dbCmd := "SELECT COUNT(*) FROM hosts WHERE host = '" + host + "';"
+	_, dbExecErr := dbconn.Exec(dbCmd)
+	if dbExecErr != nil {
+	    log.Fatalf("Failure executing SELECT for host " + host)
+        }
+
+	var hostp string;
+	_ = dbconn.QueryRow(dbCmd).Scan(&hostp)
+	hostpi, _ := strconv.Atoi(hostp)
+
+	//
+	// If not, add it to the hosts table. MySQL will generate an ID
+	//
+
+	if (hostpi == 0) {
+            dbCmd := "INSERT INTO hosts (host) VALUES ('" + host + "');"
+	    _, dbExecErr = dbconn.Exec(dbCmd)
+	    if dbExecErr != nil {
+	        log.Fatalf("Failure executing INSERT for host " + host)
+            }
+        }
+
+	//
+	// Add the most recent batch of utmp entries to the database
+	//
+
+        dbCmd = "INSERT INTO entries VALUES ('" + host + "','" + user + "','" + line + "','" + from + "','" + stamp + "');"
+        _, dbExecErr = dbconn.Exec(dbCmd)
+	if dbExecErr != nil {
+	    log.Fatalf("Failure executing INSERT for host " + host)
+        }
 
 	dbconn.Close()
     }
