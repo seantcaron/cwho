@@ -115,7 +115,8 @@ func handle_connection(c net.Conn) {
 	//
 
         if (flip == true) {
-            dbCmd = "UPDATE utmp SET latest = false;"
+            dbCmd = "UPDATE utmp SET latest = false WHERE host = '" + host +"';"
+	    fmt.Printf("%s\n", dbCmd)
 	    _, dbExecErr = dbconn.Exec(dbCmd)
 	    if dbExecErr != nil {
                 log.Fatalf("Failure executing UPDATE on latest for host " + host)
