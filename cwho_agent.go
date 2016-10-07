@@ -17,6 +17,7 @@ import (
     "log"
     "net"
     "fmt"
+    "bytes"
     "github.com/EricLagergren/go-gnulib/utmp"
 )
 
@@ -43,7 +44,7 @@ func main() {
     // Open the connection to the collection host
     //
 
-    conn, err := net.Dial("tcp", "localhost:5963")
+    conn, err := net.Dial("tcp", "198.0.105.91:5963")
     if err != nil {
         log.Fatalf("Error calling net.Dial()")
     }
@@ -57,9 +58,18 @@ func main() {
     for _, arg := range ut {
         if (arg.Type == 7) {
             tt := time.Unix(int64(arg.Tv.Sec), int64(arg.Tv.Usec))
-            ts := tt.Format(time.ANSIC)
-            fmt.Printf("%s\t%s\t%s\t%s\n", arg.User, arg.Line, arg.Host, ts)
-            fmt.Fprintf(conn, "%s %s %s %s %s\n", host, arg.User, arg.Line, arg.Host, ts)
+            ts := tt.Format(time.RFC3339)
+
+	    au := bytes.Trim(arg.User[:], "\x00") 
+            al := bytes.Trim(arg.Line[:], "\x00")
+	    ah := bytes.Trim(arg.Host[:], "\x00")
+
+            if (len(ah) == 0) {
+	        ah = []byte("local")
+            }
+
+            fmt.Printf("%s\t%s\t%s\t%s\n", au, al, ah, ts)
+            fmt.Fprintf(conn, "%s %s %s %s %s\n", host, au, al, ah, ts)
         }
     }
 
