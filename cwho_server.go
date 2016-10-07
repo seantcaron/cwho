@@ -36,7 +36,7 @@ func main() {
 
 //
 // Database schema:
-//  CREATE TABLE entries (host varchar(258), user varchar(34), line varchar(34), fromhost varchar(258), timestamp varchar(34));
+//  CREATE TABLE utmp (host varchar(258), user varchar(34), line varchar(34), fromhost varchar(258), timestamp varchar(34));
 //  CREATE TABLE hosts (host varchar(258), hostid integer NOT NULL AUTO_INCREMENT PRIMARY KEY);
 //
 
@@ -111,7 +111,7 @@ func handle_connection(c net.Conn) {
 	// Add the most recent batch of utmp entries to the database
 	//
 
-        dbCmd = "INSERT INTO entries VALUES ('" + host + "','" + user + "','" + line + "','" + from + "','" + stamp + "');"
+        dbCmd = "INSERT INTO utmp VALUES ('" + host + "','" + user + "','" + line + "','" + from + "','" + stamp + "');"
         _, dbExecErr = dbconn.Exec(dbCmd)
 	if dbExecErr != nil {
 	    log.Fatalf("Failure executing INSERT for host " + host)
