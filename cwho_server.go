@@ -36,7 +36,7 @@ func main() {
 
 //
 // Database schema:
-//  CREATE TABLE utmp (host varchar(258), user varchar(34), line varchar(34), fromhost varchar(258), timestamp varchar(34));
+//  CREATE TABLE utmp (host varchar(258), user varchar(34), line varchar(34), fromhost varchar(258), timestamp varchar(34), latest boolean);
 //  CREATE TABLE hosts (host varchar(258), hostid integer NOT NULL AUTO_INCREMENT PRIMARY KEY);
 //
 
@@ -47,8 +47,10 @@ func handle_connection(c net.Conn) {
     var dbName string = "cwho"
     var dbHost string = "localhost"
 
-    var myDSN string;
-    
+    var myDSN string
+
+    var flip bool = true
+
     input := bufio.NewScanner(c)
     
     fmt.Printf("%s\n", input.Text())
@@ -107,11 +109,25 @@ func handle_connection(c net.Conn) {
             }
         }
 
+        //
+	// Mark any existing entries as not being the latest, for the
+	//  display layer to use
+	//
+
+        if (flip == true) {
+            dbCmd = "UPDATE utmp SET latest = false;"
+	    _, dbExecErr = dbconn.Exec(dbCmd)
+	    if dbExecErr != nil {
+                log.Fatalf("Failure executing UPDATE on latest for host " + host)
+	    }
+	    flip = false
+        }
+
 	//
 	// Add the most recent batch of utmp entries to the database
 	//
 
-        dbCmd = "INSERT INTO utmp VALUES ('" + host + "','" + user + "','" + line + "','" + from + "','" + stamp + "');"
+        dbCmd = "INSERT INTO utmp VALUES ('" + host + "','" + user + "','" + line + "','" + from + "','" + stamp + "', true);"
         _, dbExecErr = dbconn.Exec(dbCmd)
 	if dbExecErr != nil {
 	    log.Fatalf("Failure executing INSERT for host " + host)
