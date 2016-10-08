@@ -25,6 +25,10 @@ func main() {
     var u = "/var/run/utmp"
     var ut []*utmp.Utmp
 
+    if ((len(os.Args) != 3) || (os.Args[1] != "-h")) {
+        log.Fatalf("Usage: %s -h server\n", os.Args[0])
+    }
+
     host, _ := os.Hostname()
     
     if (strings.Index(host, ".") != -1) {
@@ -44,7 +48,7 @@ func main() {
     // Open the connection to the collection host
     //
 
-    conn, err := net.Dial("tcp", "198.0.105.91:5963")
+    conn, err := net.Dial("tcp", os.Args[2]+":5963")
     if err != nil {
         log.Fatalf("Error calling net.Dial()")
     }
@@ -73,8 +77,6 @@ func main() {
         }
     }
 
-    //fmt.Fprintf(conn, "", )
-    
     conn.Close()
 }
 
