@@ -13,13 +13,14 @@ import (
     "bufio"
     "log"
     "strconv"
+    "time"
     "database/sql"
     _ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
 
-    listener, err := net.Listen("tcp", "localhost:5963")
+    listener, err := net.Listen("tcp", "198.0.105.91:5963")
     if err != nil {
         return
     }
@@ -65,7 +66,8 @@ func handle_connection(c net.Conn) {
 	user := data[1]
 	line := data[2]
 	from := data[3]
-	stamp := data[4]
+	secs, _ := strconv.ParseInt(data[4], 10, 64)
+        usecs, _ := strconv.ParseInt(data[5], 10, 64)
 
         //fmt.Printf("%s\n", input.Text())
 
@@ -116,7 +118,6 @@ func handle_connection(c net.Conn) {
 
         if (flip == true) {
             dbCmd = "UPDATE utmp SET latest = false WHERE host = '" + host +"';"
-	    fmt.Printf("%s\n", dbCmd)
 	    _, dbExecErr = dbconn.Exec(dbCmd)
 	    if dbExecErr != nil {
                 log.Fatalf("Failure executing UPDATE on latest for host " + host)
@@ -127,6 +128,8 @@ func handle_connection(c net.Conn) {
 	//
 	// Add the most recent batch of utmp entries to the database
 	//
+
+        stamp := time.Unix(secs,usecs).Format(time.Stamp)
 
         dbCmd = "INSERT INTO utmp VALUES ('" + host + "','" + user + "','" + line + "','" + from + "','" + stamp + "', true);"
         _, dbExecErr = dbconn.Exec(dbCmd)
