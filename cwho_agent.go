@@ -7,13 +7,8 @@ package main
 // go get github.com/EricLagergren/go-gnulib/utmp
 
 import (
-    //"bufio"
-    //"fmt"
     "os"
-    //"os/exec"
     "strings"
-    //"strconv"
-    //"time"
     "log"
     "net"
     "fmt"
@@ -62,6 +57,10 @@ func main() {
 	    ts := int64(arg.Tv.Sec)
 	    tu := int64(arg.Tv.Usec)
 
+            //
+	    // Remove the NULs our fields seem to get padded out with.
+	    //
+
 	    au := bytes.Trim(arg.User[:], "\x00") 
             al := bytes.Trim(arg.Line[:], "\x00")
 	    ah := bytes.Trim(arg.Host[:], "\x00")
@@ -70,7 +69,6 @@ func main() {
 	        ah = []byte("local")
             }
 
-            fmt.Printf("%s %s %s %d %d\n", au, al, ah, ts, tu)
             fmt.Fprintf(conn, "%s %s %s %s %d %d\n", host, au, al, ah, ts, tu)
         }
     }
