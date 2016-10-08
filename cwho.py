@@ -3,13 +3,16 @@
 # Pull data from the CWho database and generate the Web dashboard
 #  Sean Caron (scaron@umich.edu)
 
-import cgi, sys, MySQLdb
+import cgi, time, sys, MySQLdb
 
 print('Content-type: text/html\n')
-print('<HTML><HEAD><TITLE>CWho</TITLE></HEAD>\n')
-print('<BODY BGCOLOR=white TEXT=BLACK VLINK=BLACK TEXT=BLACK>\n')
-print('<STYLE>h1 { font-family: Arial, Helvetica; } p { font-family: Arial, Helvetica; } tr { font-family: Courier; }</STYLE>\n')
-print('<H1>CWho</H1>\n')
+print('<html>')
+print('<head>')
+print('<title>CWho</title>')
+print('<style type="text/css">h1 { font-family: Arial, Helvetica; } p { font-size: medium; font-weight: bold; font-family: Arial, Helvetica; width: 80%; margin: 10px auto; } table { height: 15%; margin: 10px auto; width: 80%; } td { font-family: Courier; }</style>')
+print('</head>')
+print('<body bgcolor=White text=Black vlink=Black text=Black>')
+print('<h1>CWho: ' + time.strftime("%A %b %d %H:%m:%S %Z", time.localtime()) + '</h1>')
 
 db = MySQLdb.connect(user="cwho",passwd="xyzzy123",db="cwho")
 
@@ -30,31 +33,31 @@ for host in hosts:
 
     # user port fromhost time
 
-    print('<P><B>' + host[0] + '</B><P>\n')
-    print('<TABLE CELLSPACING=0 CELLPADDING=10 BORDER=0>\n')
+    print('<p>' + host[0] + '</p>')
+    print('<table>')
     for row in utmps:
         if toggle == 0:
-            print('<TR BGCOLOR=#CCFFCC><TD>\n')
+            print('<tr bgcolor=#ccffcc><td>')
         else:
-            print('<TR><TD>\n')
+            print('<tr><td>')
     
         print(row[1])
-        print('</TD><TD>')
+        print('</td><td>')
         print(row[2])
-        print('</TD><TD>')
+        print('</td><td>')
         print(row[3])
-        print('</TD><TD>')
+        print('</td><td>')
         print(row[4])
-        print('</TD></TR>\n')
-  
+        print('</td></tr>')
+ 
         toggle = not toggle
 
-    print('</TABLE>\n')
+    print('</table>')
 
-    print('<P>\n')
 # We need to commit() the query on inserts and modifies after execution before they actually take effect
 # db.commit()
 
-print('</BODY></HTML>\n')
+print('</body>')
+print('</html>')
 
 db.close()
