@@ -7,7 +7,7 @@ package main
 import (
     // "io"
     "net"
-    // "os"
+    "os"
     "fmt"
     "strings"
     "bufio"
@@ -18,13 +18,59 @@ import (
     _ "github.com/go-sql-driver/mysql"
 )
 
+var dbUser, dbPass, dbName, dbHost string
+
 func main() {
 
-    listener, err := net.Listen("tcp", "198.0.105.91:5963")
-    if err != nil {
-        return
+    var bindaddr, conffile string
+
+    if (len(os.Args) != 5) {
+        log.Fatalf("Usage: %s -b bindaddr -f configfile\n", os.Args[0])
     }
-    
+
+    for i := 1; i < len(os.Args); i++ {
+        switch os.Args[i] {
+	    case "-b":
+	        bindaddr = os.Args[i+1]
+            case "-f":
+	        conffile = os.Args[i+1]
+        }
+    }
+
+    conf, err := os.Open(conffile)
+    if err != nil {
+        log.Fatalf("Failed opening configuration file for reading")
+    }
+
+    inp := bufio.NewScanner(conf)
+
+    for inp.Scan() {
+        line := inp.Text()
+
+	fields := strings.Fields(line)
+	key := strings.ToLower(fields[0])
+
+	switch key {
+            case "dbuser":
+	        dbUser = fields[1]
+            case "dbpass":
+	        dbPass = fields[1]
+            case "dbname":
+	        dbName = fields[1]
+            case "dbhost":
+	        dbHost = fields[1]
+            default:
+	        log.Print("Ignoring nonsense configuration %s\n", fields[1])
+        }    
+    }
+
+    conf.Close()
+
+    listener, err := net.Listen("tcp", bindaddr+":5963")
+    if err != nil {
+        log.Fatalf("Failure calling net.Listen()\n")
+    }
+
     for {
         conn, err := listener.Accept()
 	if err != nil {
@@ -42,11 +88,6 @@ func main() {
 //
 
 func handle_connection(c net.Conn) {
-
-    var dbUser string = "cwho"
-    var dbPass string = "xyzzy123"
-    var dbName string = "cwho"
-    var dbHost string = "localhost"
 
     var myDSN string
 
@@ -69,20 +110,18 @@ func handle_connection(c net.Conn) {
 	secs, _ := strconv.ParseInt(data[4], 10, 64)
         usecs, _ := strconv.ParseInt(data[5], 10, 64)
 
-        //fmt.Printf("%s\n", input.Text())
-
         fmt.Printf(inp+"\n")
  
         myDSN = dbUser + ":" + dbPass + "@tcp(" + dbHost + ":3306)/" + dbName
     
         dbconn, dbConnErr := sql.Open("mysql", myDSN)
         if dbConnErr != nil {
-	    log.Fatalf("Error connecting to database")
+	    log.Fatalf("Failed connecting to database")
         }
 
 	dbPingErr := dbconn.Ping()
 	if dbPingErr != nil {
-	    log.Fatalf("Error attempting to ping database connection")
+	    log.Fatalf("Failed pinging database connection")
         }
 
 	//
@@ -92,7 +131,7 @@ func handle_connection(c net.Conn) {
         dbCmd := "SELECT COUNT(*) FROM hosts WHERE host = '" + host + "';"
 	_, dbExecErr := dbconn.Exec(dbCmd)
 	if dbExecErr != nil {
-	    log.Fatalf("Failure executing SELECT for host " + host)
+	    log.Fatalf("Failed executing SELECT for host " + host)
         }
 
 	var hostp string;
@@ -107,7 +146,7 @@ func handle_connection(c net.Conn) {
             dbCmd := "INSERT INTO hosts (host) VALUES ('" + host + "');"
 	    _, dbExecErr = dbconn.Exec(dbCmd)
 	    if dbExecErr != nil {
-	        log.Fatalf("Failure executing INSERT for host " + host)
+	        log.Fatalf("Failed executing INSERT for host " + host)
             }
         }
 
@@ -120,7 +159,7 @@ func handle_connection(c net.Conn) {
             dbCmd = "UPDATE utmp SET latest = false WHERE host = '" + host +"';"
 	    _, dbExecErr = dbconn.Exec(dbCmd)
 	    if dbExecErr != nil {
-                log.Fatalf("Failure executing UPDATE on latest for host " + host)
+                log.Fatalf("Failed executing UPDATE on latest for host " + host)
 	    }
 	    flip = false
         }
@@ -134,7 +173,7 @@ func handle_connection(c net.Conn) {
         dbCmd = "INSERT INTO utmp VALUES ('" + host + "','" + user + "','" + line + "','" + from + "','" + stamp + "', true);"
         _, dbExecErr = dbconn.Exec(dbCmd)
 	if dbExecErr != nil {
-	    log.Fatalf("Failure executing INSERT for host " + host)
+	    log.Fatalf("Failed executing INSERT for host " + host)
         }
 
 	dbconn.Close()
