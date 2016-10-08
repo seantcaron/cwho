@@ -13,7 +13,7 @@ import (
     //"os/exec"
     "strings"
     //"strconv"
-    "time"
+    //"time"
     "log"
     "net"
     "fmt"
@@ -57,12 +57,10 @@ func main() {
     // For each line of the utmp file, parse out the information that we need.
     //
 
-    fmt.Printf("who results for %s\n", host)
-
     for _, arg := range ut {
         if (arg.Type == 7) {
-            tt := time.Unix(int64(arg.Tv.Sec), int64(arg.Tv.Usec))
-            ts := tt.Format(time.RFC3339)
+	    ts := int64(arg.Tv.Sec)
+	    tu := int64(arg.Tv.Usec)
 
 	    au := bytes.Trim(arg.User[:], "\x00") 
             al := bytes.Trim(arg.Line[:], "\x00")
@@ -72,8 +70,8 @@ func main() {
 	        ah = []byte("local")
             }
 
-            fmt.Printf("%s\t%s\t%s\t%s\n", au, al, ah, ts)
-            fmt.Fprintf(conn, "%s %s %s %s %s\n", host, au, al, ah, ts)
+            fmt.Printf("%s %s %s %d %d\n", au, al, ah, ts, tu)
+            fmt.Fprintf(conn, "%s %s %s %s %d %d\n", host, au, al, ah, ts, tu)
         }
     }
 
