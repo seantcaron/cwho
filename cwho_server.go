@@ -5,7 +5,6 @@
 package main
 
 import (
-    // "io"
     "net"
     "os"
     "fmt"
@@ -47,21 +46,23 @@ func main() {
     for inp.Scan() {
         line := inp.Text()
 
-	fields := strings.Fields(line)
-	key := strings.ToLower(fields[0])
+        if (len(line) > 0) {
+	    fields := strings.Fields(line)
+	    key := strings.ToLower(fields[0])
 
-	switch key {
-            case "dbuser":
-	        dbUser = fields[1]
-            case "dbpass":
-	        dbPass = fields[1]
-            case "dbname":
-	        dbName = fields[1]
-            case "dbhost":
-	        dbHost = fields[1]
-            default:
-	        log.Print("Ignoring nonsense configuration %s\n", fields[1])
-        }    
+	    switch key {
+                case "dbuser":
+	            dbUser = fields[1]
+                case "dbpass":
+	            dbPass = fields[1]
+                case "dbname":
+	            dbName = fields[1]
+                case "dbhost":
+	            dbHost = fields[1]
+                default:
+	            log.Print("Ignoring nonsense configuration %s\n", fields[1])
+            } 
+        }
     }
 
     conf.Close()
