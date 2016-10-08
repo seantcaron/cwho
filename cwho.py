@@ -45,9 +45,9 @@ for host in hosts:
         print('</td><td>')
         print(row[2])
         print('</td><td>')
-        print(row[3])
-        print('</td><td>')
         print(row[4])
+        print('</td><td>')
+        print(row[3])
         print('</td></tr>')
  
         toggle = not toggle
