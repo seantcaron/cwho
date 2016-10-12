@@ -135,7 +135,7 @@ func handle_connection(c net.Conn) {
 	    log.Fatalf("Failed executing SELECT for host " + host)
         }
 
-	var hostp string;
+	var hostp string
 	_ = dbconn.QueryRow(dbCmd).Scan(&hostp)
 	hostpi, _ := strconv.Atoi(hostp)
 
