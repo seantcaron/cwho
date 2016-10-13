@@ -20,7 +20,6 @@ import (
 var dbUser, dbPass, dbName, dbHost string
 
 func main() {
-
     var bindaddr, conffile string
 
     if (len(os.Args) != 5) {
@@ -89,15 +88,10 @@ func main() {
 //
 
 func handle_connection(c net.Conn) {
-
     var myDSN string
-
-    // var flip bool = true
 
     input := bufio.NewScanner(c)
     
-    fmt.Printf("%s\n", input.Text())
-
     //
     // Generate a timestamp for these samples
     //
@@ -118,8 +112,6 @@ func handle_connection(c net.Conn) {
 	secs, _ := strconv.ParseInt(data[4], 10, 64)
         usecs, _ := strconv.ParseInt(data[5], 10, 64)
 
-        fmt.Printf(inp+"\n")
- 
         myDSN = dbUser + ":" + dbPass + "@tcp(" + dbHost + ":3306)/" + dbName
     
         dbconn, dbConnErr := sql.Open("mysql", myDSN)
@@ -166,20 +158,6 @@ func handle_connection(c net.Conn) {
             }
         }
 
-        //
-	// Mark any existing entries as not being the latest, for the
-	//  display layer to use
-	//
-
-        //if (flip == true) {
-        //    dbCmd = "UPDATE utmp SET latest = false WHERE host = '" + host +"';"
-	//    _, dbExecErr = dbconn.Exec(dbCmd)
-	//    if dbExecErr != nil {
-        //        log.Fatalf("Failed executing UPDATE on latest for host " + host)
-	//    }
-	//    flip = false
-        //}
-
 	//
 	// Add the most recent batch of utmp entries to the database
 	//
@@ -187,7 +165,6 @@ func handle_connection(c net.Conn) {
         stamp := time.Unix(secs,usecs).Format(time.Stamp)
 
         dbCmd = "INSERT INTO utmp VALUES (" + tt + ",'" + host + "','" + user + "','" + line + "','" + from + "','" + stamp + "');"
-	fmt.Printf("%s\n", dbCmd)
         _, dbExecErr = dbconn.Exec(dbCmd)
 	if dbExecErr != nil {
 	    log.Fatalf("Failed executing utmp table INSERT for host " + host)
