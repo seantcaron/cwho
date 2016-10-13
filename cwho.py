@@ -18,12 +18,12 @@ db = MySQLdb.connect(user="cwho",passwd="xyzzy123",db="cwho")
 
 curs = db.cursor()
 
-query = 'SELECT host from hosts;'
+query = 'SELECT host, mostrecent from hosts;'
 curs.execute(query)
 hosts = curs.fetchall()
 
 for host in hosts:
-    query = 'SELECT * FROM utmp WHERE host = \'' + host[0] + '\' and latest = true;'
+    query = 'SELECT * FROM utmp WHERE host = \'' + host[0] + '\' AND sampletime = ' + str(host[1]) + ';'
 
     curs.execute(query)
 
@@ -41,13 +41,13 @@ for host in hosts:
         else:
             print('<tr><td>')
     
-        print(row[1])
-        print('</td><td>')
         print(row[2])
         print('</td><td>')
-        print(row[4])
-        print('</td><td>')
         print(row[3])
+        print('</td><td>')
+        print(row[5])
+        print('</td><td>')
+        print(row[4])
         print('</td></tr>')
  
         toggle = not toggle
