@@ -84,20 +84,27 @@ func main() {
 
 //
 // Database schema:
-//  CREATE TABLE utmp (host varchar(258), user varchar(34), line varchar(34), fromhost varchar(258), timestamp varchar(34), latest boolean);
-//  CREATE TABLE hosts (host varchar(258), hostid integer NOT NULL AUTO_INCREMENT PRIMARY KEY);
+//  CREATE TABLE utmp ([sampletime bigint], host varchar(258), user varchar(34), line varchar(34), fromhost varchar(258), timestamp varchar(34), [XXXlatest booleanXXX]);
+//  CREATE TABLE hosts (host varchar(258), hostid integer NOT NULL AUTO_INCREMENT PRIMARY KEY, [mostrecent bigint]);
 //
 
 func handle_connection(c net.Conn) {
 
     var myDSN string
 
-    var flip bool = true
+    // var flip bool = true
 
     input := bufio.NewScanner(c)
     
     fmt.Printf("%s\n", input.Text())
-    
+
+    //
+    // Generate a timestamp for these samples
+    //
+
+    t := time.Now().Unix()
+    tt := strconv.FormatInt(t, 10)
+
     for input.Scan() {
     
         inp := input.Text()
@@ -141,13 +148,21 @@ func handle_connection(c net.Conn) {
 
 	//
 	// If not, add it to the hosts table. MySQL will generate an ID
+	// If so, we need to update the sample time in the mostrecent
+	//  field
 	//
 
 	if (hostpi == 0) {
-            dbCmd := "INSERT INTO hosts (host) VALUES ('" + host + "');"
+            dbCmd := "INSERT INTO hosts (host, mostrecent) VALUES ('" + host + "'," + tt + ");"
 	    _, dbExecErr = dbconn.Exec(dbCmd)
 	    if dbExecErr != nil {
-	        log.Fatalf("Failed executing INSERT for host " + host)
+	        log.Fatalf("Failed executing host table INSERT for host " + host)
+            }
+        } else {
+            dbCmd := "UPDATE hosts SET mostrecent = " + tt + " WHERE host = '" + host + "';"
+	    _, dbExecErr = dbconn.Exec(dbCmd)
+            if dbExecErr != nil {
+	        log.Fatalf("Failed executing host table mostrecent field UPDATE for host " + host)
             }
         }
 
@@ -156,14 +171,14 @@ func handle_connection(c net.Conn) {
 	//  display layer to use
 	//
 
-        if (flip == true) {
-            dbCmd = "UPDATE utmp SET latest = false WHERE host = '" + host +"';"
-	    _, dbExecErr = dbconn.Exec(dbCmd)
-	    if dbExecErr != nil {
-                log.Fatalf("Failed executing UPDATE on latest for host " + host)
-	    }
-	    flip = false
-        }
+        //if (flip == true) {
+        //    dbCmd = "UPDATE utmp SET latest = false WHERE host = '" + host +"';"
+	//    _, dbExecErr = dbconn.Exec(dbCmd)
+	//    if dbExecErr != nil {
+        //        log.Fatalf("Failed executing UPDATE on latest for host " + host)
+	//    }
+	//    flip = false
+        //}
 
 	//
 	// Add the most recent batch of utmp entries to the database
@@ -171,10 +186,11 @@ func handle_connection(c net.Conn) {
 
         stamp := time.Unix(secs,usecs).Format(time.Stamp)
 
-        dbCmd = "INSERT INTO utmp VALUES ('" + host + "','" + user + "','" + line + "','" + from + "','" + stamp + "', true);"
+        dbCmd = "INSERT INTO utmp VALUES (" + tt + ",'" + host + "','" + user + "','" + line + "','" + from + "','" + stamp + "');"
+	fmt.Printf("%s\n", dbCmd)
         _, dbExecErr = dbconn.Exec(dbCmd)
 	if dbExecErr != nil {
-	    log.Fatalf("Failed executing INSERT for host " + host)
+	    log.Fatalf("Failed executing utmp table INSERT for host " + host)
         }
 
 	dbconn.Close()
