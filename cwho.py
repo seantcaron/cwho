@@ -13,7 +13,7 @@ print('<meta http-equiv="refresh" content="600">')
 print('<style type="text/css">* { border-radius: 5px; } h1 { font-family: Arial, Helvetica; } p { font-size: medium; font-weight: bold; font-family: Arial, Helvetica; width: 80%; margin: 10px auto; } table { height: 15%; margin: 10px auto; width: 80%; } td { 0px; font-family: Courier; }</style>')
 print('</head>')
 print('<body bgcolor=White text=Black vlink=Black text=Black>')
-print('<h1>CWho: ' + time.strftime("%A %b %d %H:%m:%S %Z", time.localtime()) + '</h1>')
+print('<h1>CWho: ' + time.strftime("%A %b %d %H:%M:%S %Z", time.localtime()) + '</h1>')
 
 db = MySQLdb.connect(user="cwho",passwd="xyzzy123",db="cwho")
 
