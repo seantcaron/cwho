@@ -3,7 +3,7 @@
 # Pull data from the CWho database and generate the Web dashboard
 #  Sean Caron (scaron@umich.edu)
 
-import cgi, time, sys, MySQLdb
+import cgi, time, sys, MySQLdb, ConfigParser
 
 print('Content-type: text/html\n')
 print('<html>')
@@ -15,7 +15,15 @@ print('</head>')
 print('<body bgcolor=White text=Black vlink=Black text=Black>')
 print('<h1>CWho: ' + time.strftime("%A %b %d %H:%M:%S %Z", time.localtime()) + '</h1>')
 
-db = MySQLdb.connect(user="cwho",passwd="xyzzy123",db="cwho")
+cfg = ConfigParser.ConfigParser()
+cfg.read('/etc/cwho/dashboard.ini')
+
+dbuser = cfg.get('database', 'user')
+dbpass = cfg.get('database', 'passwd')
+dbname = cfg.get('database', 'db')
+dbhost = cfg.get('database', 'host')
+
+db = MySQLdb.connect(host=dbhost,user=dbuser,passwd=dbpass,db=dbname)
 
 curs = db.cursor()
 
