@@ -18,7 +18,7 @@ db = MySQLdb.connect(user="cwho",passwd="xyzzy123",db="cwho")
 
 curs = db.cursor()
 
-query = 'SELECT host, mostrecent from hosts;'
+query = 'SELECT host, mostrecent from hosts ORDER BY host ASC;'
 curs.execute(query)
 hosts = curs.fetchall()
 
