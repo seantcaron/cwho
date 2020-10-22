@@ -33,3 +33,10 @@ Schema for hosts table:
 CREATE TABLE hosts (host varchar(258), hostid integer NOT NULL
  AUTO_INCREMENT PRIMARY KEY, mostrecent bigint);
 ```
+
+Schema for last table:
+
+```
+CREATE TABLE last (host varchar(258), user varchar(34), timestamp varchar(34));
+```
+
