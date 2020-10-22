@@ -82,8 +82,9 @@ func main() {
 
 //
 // Database schema:
-//  CREATE TABLE utmp ([sampletime bigint], host varchar(258), user varchar(34), line varchar(34), fromhost varchar(258), timestamp varchar(34), [XXXlatest booleanXXX]);
-//  CREATE TABLE hosts (host varchar(258), hostid integer NOT NULL AUTO_INCREMENT PRIMARY KEY, [mostrecent bigint]);
+//  CREATE TABLE utmp (sampletime bigint, host varchar(258), user varchar(34), line varchar(34), fromhost varchar(258), timestamp varchar(34));
+//  CREATE TABLE hosts (host varchar(258), hostid integer NOT NULL AUTO_INCREMENT PRIMARY KEY, mostrecent bigint);
+//  CREATE TABLE last (host varchar(258), user varchar(34), timestamp varchar(34));
 //
 
 func handle_connection(c net.Conn) {
@@ -167,6 +168,35 @@ func handle_connection(c net.Conn) {
         _, dbExecErr = dbconn.Exec(dbCmd)
 	if dbExecErr != nil {
 	    log.Fatalf("Failed executing utmp table INSERT for host " + host)
+        }
+
+        //
+        // Update last login table
+        //
+
+        dbCmd = "SELECT COUNT(*) FROM last WHERE host = '" + host + "' AND user ='" + user + "';"
+        _, dbExecErr = dbconn.Exec(dbCmd)
+        if dbExecErr != nil {
+            log.Fatalf("Failed executing SELECT for host " + host)
+        }
+
+        var lastp string
+        _ = dbconn.QueryRow(dbCmd).Scan(&lastp)
+        lastpi, _ := strconv.Atoi(lastp)
+
+        // User-host pair not already present in last login table
+        if (lastpi == 0) {
+            dbCmd := "INSERT INTO last VALUES ('" + host + "','" + user + "','" + stamp + "');"
+            _, dbExecErr = dbconn.Exec(dbCmd)
+            if dbExecErr != nil {
+                log.Fatalf("Failed executing last table INSERT for user " + user + " and host " + host)
+            }
+        } else {
+            dbCmd := "UPDATE last SET stamp = " + stamp + " WHERE host = '" + host + "' AND user = '" + user + "';"
+            _, dbExecErr = dbconn.Exec(dbCmd)
+            if dbExecErr != nil {
+                log.Fatalf("Failed executing last table UPDATE for user " + user + " and host " + host)
+            }
         }
 
         //
