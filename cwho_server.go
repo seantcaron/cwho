@@ -7,7 +7,6 @@ package main
 import (
     "net"
     "os"
-    "fmt"
     "strings"
     "bufio"
     "log"
@@ -168,6 +167,16 @@ func handle_connection(c net.Conn) {
         _, dbExecErr = dbconn.Exec(dbCmd)
 	if dbExecErr != nil {
 	    log.Fatalf("Failed executing utmp table INSERT for host " + host)
+        }
+
+        //
+        // Drop old utmp entries for this host so the DB doesn't grow without bound
+        //
+
+        dbCmd = "DELETE FROM utmp WHERE host = '" + host + "' AND sampletime != '" + tt + "';"
+        _, dbExecErr = dbconn.Exec(dbCmd)
+        if dbExecErr != nil {
+            log.Fatalf("Failed executing utmp table cleanup DELETE for host " + host)
         }
 
 	dbconn.Close()
