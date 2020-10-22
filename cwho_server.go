@@ -192,7 +192,7 @@ func handle_connection(c net.Conn) {
                 log.Fatalf("Failed executing last table INSERT for user " + user + " and host " + host)
             }
         } else {
-            dbCmd := "UPDATE last SET stamp = " + stamp + " WHERE host = '" + host + "' AND user = '" + user + "';"
+            dbCmd := "UPDATE last SET timestamp = " + stamp + " WHERE host = '" + host + "' AND user = '" + user + "';"
             _, dbExecErr = dbconn.Exec(dbCmd)
             if dbExecErr != nil {
                 log.Fatalf("Failed executing last table UPDATE for user " + user + " and host " + host)
